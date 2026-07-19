@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Калькулятор Спільного Чеку</title>
     <style>
         body {
@@ -161,6 +161,9 @@
         container.appendChild(row);
     });
 
+    // Змінна для збереження тексту результату
+    let textToShare = "";
+
     // Логіка розрахунку
     document.getElementById('calcBtn').addEventListener('click', function() {
         const totalBeer = parseFloat(document.getElementById('totalBeer').value) || 0;
@@ -170,11 +173,8 @@
         
         let beerDrinkersCount = 0;
         let foodEatersCount = 0;
-        
-        // Масив для збору даних про людей
         const people = [];
 
-        // 1. Рахуємо кількість людей на кожну категорію
         rows.forEach(row => {
             const name = row.querySelector('.person-name').value.trim() || "Анонім";
             const wantsBeer = row.querySelector('.chk-beer').checked;
@@ -186,31 +186,83 @@
             people.push({ name, wantsBeer, wantsFood, total: 0 });
         });
 
-        // 2. Вираховуємо долю на одну людину
         const beerShare = beerDrinkersCount > 0 ? (totalBeer / beerDrinkersCount) : 0;
         const foodShare = foodEatersCount > 0 ? (totalFood / foodEatersCount) : 0;
 
-        // 3. Нараховуємо суми кожному
         people.forEach(person => {
             if (person.wantsBeer) person.total += beerShare;
             if (person.wantsFood) person.total += foodShare;
         });
 
-        // 4. Виводимо результати
         const resultsList = document.getElementById('resultsList');
         resultsList.innerHTML = '';
         
         if (people.length === 0) {
             resultsList.innerHTML = '<div>Нікого не додано для розрахунку.</div>';
-        } else {
-            people.forEach(person => {
-                const item = document.createElement('div');
-                item.className = 'result-item';
-                item.innerHTML = `<strong>${person.name}</strong> <span>${person.total.toFixed(2)} ₴</span>`;
-                resultsList.appendChild(item);
+            return;
+        }
+
+        // Формуємо гарний текстовий рядок для месенджерів
+        textToShare = "📊 **Розрахунок чеку:**\n";
+        
+        people.forEach(person => {
+            const roundedTotal = person.total.toFixed(2);
+            textToShare += `• ${person.name}: ${roundedTotal} ₴\n`;
+
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.innerHTML = `<strong>${person.name}</strong> <span>${roundedTotal} ₴</span>`;
+            resultsList.appendChild(item);
+        });
+        
+        textToShare += `\n💰 Разом: ${(totalBeer + totalFood).toFixed(2)} ₴`;
+
+        // Додаємо кнопки "Поділитися" та "Копіювати", якщо їх ще немає
+        if (!document.getElementById('shareBlock')) {
+            const shareBlock = document.createElement('div');
+            shareBlock.id = 'shareBlock';
+            shareBlock.style.marginTop = '20px';
+            shareBlock.style.display = 'flex';
+            shareBlock.style.gap = '10px';
+            
+            shareBlock.innerHTML = `
+                <button type="button" class="btn" id="shareBtn" style="background-color: #9b59b6; flex: 1;">📱 Надіслати</button>
+                <button type="button" class="btn" id="copyBtn" style="background-color: #7f8c8d; flex: 1;">📋 Копіювати</button>
+            `;
+            document.getElementById('results').appendChild(shareBlock);
+
+            // Обробник для кнопки "Поділитися" (працює на смартфонах)
+            document.getElementById('shareBtn').addEventListener('click', async () => {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Рахунок чеку',
+                            text: textToShare
+                        });
+                    } catch (err) {
+                        console.log("Шеринг скасовано або стався збій: ", err);
+                    }
+                } else {
+                    alert("Ваш браузер не підтримує прямий шеринг. Скористайтеся сусідньою кнопкою 'Копіювати текст'!");
+                }
+            });
+
+            // Обробник для кнопки "Копіювати" (універсальний варіант)
+            document.getElementById('copyBtn').addEventListener('click', () => {
+                // Очищаємо markdown зірочки для чистого тексту в буфері
+                const plainText = textToShare.replace(/\*\*/g, ''); 
+                navigator.clipboard.writeText(plainText).then(() => {
+                    const originalText = document.getElementById('copyBtn').innerText;
+                    document.getElementById('copyBtn').innerText = "✅ Скопійовано!";
+                    setTimeout(() => {
+                        document.getElementById('copyBtn').innerText = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    alert("Не вдалося скопіювати: " + err);
+                });
             });
         }
-        
+
         document.getElementById('results').style.display = 'block';
     });
 </script>
