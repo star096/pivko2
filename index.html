@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Спільного Чеку</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #2980b9; }
+        .btn-add { background-color: #2ecc71; margin-bottom: 20px; }
+        .btn-add:hover { background-color: #27ae60; }
+        .btn-calc { width: 100%; background-color: #e67e22; font-size: 18px; padding: 12px; }
+        .btn-calc:hover { background-color: #d35400; }
+        .btn-remove { background-color: #e74c3c; padding: 5px 10px; }
+        .btn-remove:hover { background-color: #c0392b; }
+        
+        .person-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .checkbox-group input { cursor: pointer; transform: scale(1.2); }
+        
+        #results {
+            margin-top: 25px;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 6px;
+            display: none;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #cbd5e0;
+        }
+        .result-item:last-child { border: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍻 Калькулятор Чеку 🍕</h1>
+    
+    <!-- Загальні суми -->
+    <div class="form-group">
+        <label for="totalBeer">Загальна сума за ПИВО (₴):</label>
+        <input type="number" id="totalBeer" value="0" min="0">
+    </div>
+    <div class="form-group">
+        <label for="totalFood">Загальна сума за ЇЖУ (₴):</label>
+        <input type="number" id="totalFood" value="0" min="0">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <!-- Список людей -->
+    <h3>Люди:</h3>
+    <button type="button" class="btn btn-add" id="addPersonBtn">+ Додати людину</button>
+    
+    <div id="peopleList">
+        <!-- Перша людина за замовчуванням -->
+        <div class="person-row">
+            <input type="text" placeholder="Ім'я" class="person-name" value="Гість 1">
+            <div class="checkbox-group">
+                <input type="checkbox" class="chk-beer" checked> <label style="margin:0;">Пиво</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" class="chk-food" checked> <label style="margin:0;">Їжа</label>
+            </div>
+            <button class="btn btn-remove" onclick="this.parentElement.remove()">X</button>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-calc" id="calcBtn">Розрахувати</button>
+
+    <!-- Результати -->
+    <div id="results">
+        <h3>Хто скільки винен:</h3>
+        <div id="resultsList"></div>
+    </div>
+</div>
+
+<script>
+    // Функція для додавання нового рядка людини
+    document.getElementById('addPersonBtn').addEventListener('click', function() {
+        const container = document.getElementById('peopleList');
+        const count = container.children.length + 1;
+        
+        const row = document.createElement('div');
+        row.className = 'person-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Ім'я" class="person-name" value="Гість ${count}">
+            <div class="checkbox-group">
+                <input type="checkbox" class="chk-beer" checked> <label style="margin:0;">Пиво</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" class="chk-food" checked> <label style="margin:0;">Їжа</label>
+            </div>
+            <button class="btn btn-remove" onclick="this.parentElement.remove()">X</button>
+        `;
+        container.appendChild(row);
+    });
+
+    // Логіка розрахунку
+    document.getElementById('calcBtn').addEventListener('click', function() {
+        const totalBeer = parseFloat(document.getElementById('totalBeer').value) || 0;
+        const totalFood = parseFloat(document.getElementById('totalFood').value) || 0;
+        
+        const rows = document.querySelectorAll('.person-row');
+        
+        let beerDrinkersCount = 0;
+        let foodEatersCount = 0;
+        
+        // Масив для збору даних про людей
+        const people = [];
+
+        // 1. Рахуємо кількість людей на кожну категорію
+        rows.forEach(row => {
+            const name = row.querySelector('.person-name').value.trim() || "Анонім";
+            const wantsBeer = row.querySelector('.chk-beer').checked;
+            const wantsFood = row.querySelector('.chk-food').checked;
+            
+            if (wantsBeer) beerDrinkersCount++;
+            if (wantsFood) foodEatersCount++;
+            
+            people.push({ name, wantsBeer, wantsFood, total: 0 });
+        });
+
+        // 2. Вираховуємо долю на одну людину
+        const beerShare = beerDrinkersCount > 0 ? (totalBeer / beerDrinkersCount) : 0;
+        const foodShare = foodEatersCount > 0 ? (totalFood / foodEatersCount) : 0;
+
+        // 3. Нараховуємо суми кожному
+        people.forEach(person => {
+            if (person.wantsBeer) person.total += beerShare;
+            if (person.wantsFood) person.total += foodShare;
+        });
+
+        // 4. Виводимо результати
+        const resultsList = document.getElementById('resultsList');
+        resultsList.innerHTML = '';
+        
+        if (people.length === 0) {
+            resultsList.innerHTML = '<div>Нікого не додано для розрахунку.</div>';
+        } else {
+            people.forEach(person => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.innerHTML = `<strong>${person.name}</strong> <span>${person.total.toFixed(2)} ₴</span>`;
+                resultsList.appendChild(item);
+            });
+        }
+        
+        document.getElementById('results').style.display = 'block';
+    });
+</script>
+
+</body>
+</html>
