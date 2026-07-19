@@ -15,6 +15,8 @@
         }
         .container {
             background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -141,6 +143,33 @@
 </div>
 
 <script>
+    // --- Скрипт для слайд-шоу фону ---
+    const images = [
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer1.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer2.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer3.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer4.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer5.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer6.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer7.jpg",
+        "https://smska.biz.ua/wp-content/uploads/2025/07/beer8.jpg"
+    ];
+
+    let currentImgIndex = 0;
+
+    function changeBackground() {
+        // Задаємо нове фонове зображення
+        document.body.style.backgroundImage = `url('${images[currentImgIndex]}')`;
+        // Змінюємо індекс для наступного разу
+        currentImgIndex = (currentImgIndex + 1) % images.length;
+    }
+
+    // Запускаємо першу картинку відразу
+    changeBackground();
+    // Зміна картинки кожні 5 секунд (5000 мілісекунд)
+    setInterval(changeBackground, 5000);
+    // ----------------------------------
+    
     // Функція для додавання нового рядка людини
     document.getElementById('addPersonBtn').addEventListener('click', function() {
         const container = document.getElementById('peopleList');
